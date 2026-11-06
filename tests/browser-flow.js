@@ -84,9 +84,9 @@ async (page) => {
   await test('Масштаб всей группы, ручки поворота и масштаба',async()=>{
     const before=await state();
     await page.locator('#gs').fill('1.2');
-    const pos=await page.locator('#cvs [data-uid]').first().evaluate(e=>({m:e.transform.baseVal.consolidate().matrix.e}));
+    const pos=await page.locator('#cvs [data-uid]').first().evaluate(e=>{const rect=e.firstElementChild,p=new DOMPoint(+rect.getAttribute('width')/2,+rect.getAttribute('height')/2).matrixTransform(e.transform.baseVal.consolidate().matrix);return {x:p.x,y:p.y};});
     const first=before.items[0],expected=before.W/2+(first.x-before.W/2)*1.2;
-    assert(Math.abs(pos.m-expected)<first.hw*2,'scale input failed');assert((await state()).gs===1.2,'gs');
+    assert(Math.abs(pos.x-expected)<0.001 && Math.abs(pos.y-(before.H/2+(first.y-before.H/2)*1.2))<0.001,'group centers did not scale uniformly');assert((await state()).gs===1.2,'gs');
     let box=await page.locator('[data-handle=rotate]').boundingBox();
     await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+80,box.y+40,{steps:5});await page.mouse.up();
     assert((await state()).items.some((i,k)=>i.rot!==before.items[k].rot),'group rotate');

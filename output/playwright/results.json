@@ -1,0 +1,228 @@
+{
+  "passed": 19,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Метафора: рост команды",
+      "pass": true,
+      "detail": [
+        "tulips",
+        "puzzle",
+        "phone",
+        "book"
+      ]
+    },
+    {
+      "name": "Метафора: тишина и покой",
+      "pass": true,
+      "detail": [
+        "headphones",
+        "tulips",
+        "lamp"
+      ]
+    },
+    {
+      "name": "Метафора: деньги и безопасность",
+      "pass": true,
+      "detail": [
+        "coin",
+        "wallet",
+        "folder"
+      ]
+    },
+    {
+      "name": "Стабильный seed и новая раскладка",
+      "pass": true
+    },
+    {
+      "name": "Компоненты: кошелёк, монета, ручка",
+      "pass": true
+    },
+    {
+      "name": "Три встроенные палитры",
+      "pass": true
+    },
+    {
+      "name": "Загрузка palettes/example.json и hex-списка",
+      "pass": true
+    },
+    {
+      "name": "L/S: все 10 объектов, оба состояния, равномерный масштаб",
+      "pass": true,
+      "detail": [
+        {
+          "id": "book",
+          "mode": "main",
+          "widthError": 0.0010224948875254825,
+          "heightError": 0
+        },
+        {
+          "id": "book",
+          "mode": "bg",
+          "widthError": 0.0010224948875254825,
+          "heightError": 0
+        },
+        {
+          "id": "phone",
+          "mode": "main",
+          "widthError": 0,
+          "heightError": 0.0012531328320801727
+        },
+        {
+          "id": "phone",
+          "mode": "bg",
+          "widthError": 0,
+          "heightError": 0.0012531328320801727
+        },
+        {
+          "id": "puzzle",
+          "mode": "main",
+          "widthError": 0,
+          "heightError": 0.001831501831501825
+        },
+        {
+          "id": "puzzle",
+          "mode": "bg",
+          "widthError": 0,
+          "heightError": 0.001831501831501825
+        },
+        {
+          "id": "coin",
+          "mode": "main",
+          "widthError": 0.002414875633904856,
+          "heightError": 0
+        },
+        {
+          "id": "coin",
+          "mode": "bg",
+          "widthError": 0.002414875633904856,
+          "heightError": 0
+        },
+        {
+          "id": "headphones",
+          "mode": "main",
+          "widthError": 0,
+          "heightError": 0.0011235955056180247
+        },
+        {
+          "id": "headphones",
+          "mode": "bg",
+          "widthError": 0,
+          "heightError": 0.0011235955056180247
+        },
+        {
+          "id": "lamp",
+          "mode": "main",
+          "widthError": 0.0008849557522123686,
+          "heightError": 0
+        },
+        {
+          "id": "lamp",
+          "mode": "bg",
+          "widthError": 0.0008849557522123686,
+          "heightError": 0
+        },
+        {
+          "id": "tulips",
+          "mode": "main",
+          "widthError": 0,
+          "heightError": 0.0026119033471974085
+        },
+        {
+          "id": "tulips",
+          "mode": "bg",
+          "widthError": 0,
+          "heightError": 0.0026119033471974085
+        },
+        {
+          "id": "wallet",
+          "mode": "main",
+          "widthError": 0.000931758634694746,
+          "heightError": 0
+        },
+        {
+          "id": "wallet",
+          "mode": "bg",
+          "widthError": 0.000931758634694746,
+          "heightError": 0
+        },
+        {
+          "id": "folder",
+          "mode": "main",
+          "widthError": 0.0007105706541644663,
+          "heightError": 0
+        },
+        {
+          "id": "folder",
+          "mode": "bg",
+          "widthError": 0.0007105706541644663,
+          "heightError": 0
+        },
+        {
+          "id": "pen",
+          "mode": "main",
+          "widthError": 0,
+          "heightError": 0.0019607843137254832
+        },
+        {
+          "id": "pen",
+          "mode": "bg",
+          "widthError": 0,
+          "heightError": 0.0019607843137254832
+        }
+      ]
+    },
+    {
+      "name": "Библиотека, поворот ±15°, дубль, слои, главный/фон, удаление",
+      "pass": true
+    },
+    {
+      "name": "noBg соблюдается при ручном переключении",
+      "pass": true
+    },
+    {
+      "name": "Перетаскивание, привязка и Ctrl+Z",
+      "pass": true
+    },
+    {
+      "name": "Масштаб всей группы, ручки поворота и масштаба",
+      "pass": true
+    },
+    {
+      "name": "Все размеры холста",
+      "pass": true
+    },
+    {
+      "name": "Очистить и отменить кнопкой/клавиатурой",
+      "pass": true
+    },
+    {
+      "name": "Экспорт SVG, XML, ID, ссылки, изолированный рендер",
+      "pass": true,
+      "detail": {
+        "parseError": false,
+        "unique": true,
+        "refs": true,
+        "ui": false,
+        "paths": 993,
+        "clip": 1
+      }
+    },
+    {
+      "name": "ИИ: корректный ответ, ошибки HTTP/JSON/сети и локальный откат",
+      "pass": true
+    },
+    {
+      "name": "Запоздавший ответ ИИ не отменяет ручное добавление",
+      "pass": true
+    },
+    {
+      "name": "Загрузка SVG: CSS/скрипты/ссылки отклоняются без выполнения",
+      "pass": true
+    },
+    {
+      "name": "Ошибки JS в браузере",
+      "pass": true
+    }
+  ]
+}

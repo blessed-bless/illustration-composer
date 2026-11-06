@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Inherited root paints survive; geometry unchanged",
+    "pass": true
+  },
+  {
+    "name": "Local gradient/clip/use IDs isolated between copies",
+    "pass": true
+  },
+  {
+    "name": "Inline style paints follow palette",
+    "pass": true
+  },
+  {
+    "name": "Implicit gradient stop and currentColor follow ink role",
+    "pass": true
+  },
+  {
+    "name": "SVG absolute length units and zero dimensions",
+    "pass": true
+  },
+  {
+    "name": "Imported SVG keeps its viewport for percentage geometry",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: script",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: event",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: js",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: external",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: image",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: css",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: mask",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: cssURL",
+    "pass": true
+  },
+  {
+    "name": "Reject unsafe SVG: html",
+    "pass": true
+  },
+  {
+    "name": "Palette rejects null, empty objects and invalid colors",
+    "pass": true
+  },
+  {
+    "name": "Palette list derives monochrome background from new main colors",
+    "pass": true
+  },
+  {
+    "name": "nearestRole handles shorthand, case and invalid color",
+    "pass": true
+  },
+  {
+    "name": "All 40 catalog variants retain path data and geometry attributes",
+    "pass": true
+  },
+  {
+    "name": "LLM validates IDs, deduplicates, respects noBg and model",
+    "pass": true
+  },
+  {
+    "name": "LLM rejects malformed structure",
+    "pass": true
+  }
+]

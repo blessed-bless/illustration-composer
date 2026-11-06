@@ -65,11 +65,11 @@ function buildSvg(exp) {
   for (const it of st.items) {
     const o = obj(it.id); if (!o) continue;
     const { inner, w, h, f } = draw(o, it.mode, 'item-'+it.uid), s = it.sc * st.gs * f;
-    if (exp) { g += `<g transform="${tf(it, w, h, s)}">${inner}</g>`; continue; }
+    if (exp) { g += `<g id="${(it.mode==='bg'?'bg-':'')+String(it.id).replace(/[^\w-]/g,'')}-${it.uid}" transform="${tf(it, w, h, s)}">${inner}</g>`; continue; }
     g += `<g data-uid="${it.uid}" style="cursor:move" transform="${tf(it, w, h, s)}"><rect width="${w}" height="${h}" fill="transparent"/>${inner}</g>`;
     if (it.uid === st.sel) g += `<rect transform="${tf(it, w, h, s)}" width="${w}" height="${h}" fill="none" stroke="#2b7cff" stroke-width="${(2 / s).toFixed(2)}" stroke-dasharray="${(6 / s).toFixed(1)}" pointer-events="none"/>`;
   }
-  return `<defs><clipPath id="cv-clip" clipPathUnits="userSpaceOnUse"><rect width="${st.W}" height="${st.H}"/></clipPath></defs><rect width="${st.W}" height="${st.H}" fill="${palette().canvas}"/><g clip-path="url(#cv-clip)">${g}</g>${exp ? '' : groupControls()}`;
+  return `<defs><clipPath id="cv-clip" clipPathUnits="userSpaceOnUse"><rect width="${st.W}" height="${st.H}"/></clipPath></defs><rect ${exp ? 'id="canvas" ' : ''}width="${st.W}" height="${st.H}" fill="${palette().canvas}"/><g ${exp ? 'id="composition" ' : ''}clip-path="url(#cv-clip)">${g}</g>${exp ? '' : groupControls()}`;
 }
 
 function render() {

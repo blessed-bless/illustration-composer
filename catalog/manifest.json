@@ -1,0 +1,112 @@
+[
+ {
+  "id": "book",
+  "name": "Книга",
+  "w": 1446,
+  "h": 977,
+  "file": "book.svg",
+  "bg": "book.bg.svg",
+  "s": "book.s.svg",
+  "sbg": "book.s.bg.svg",
+  "tags": "книга чтение обучение знание учеба образование курс урок история мудрость библиотека book learn read study education"
+ },
+ {
+  "id": "phone",
+  "name": "Телефон",
+  "w": 797,
+  "h": 462,
+  "file": "phone.svg",
+  "bg": "phone.bg.svg",
+  "s": "phone.s.svg",
+  "sbg": "phone.s.bg.svg",
+  "tags": "телефон смартфон приложение мобильный связь звонок сообщение соцсети app mobile phone"
+ },
+ {
+  "id": "puzzle",
+  "name": "Пазл",
+  "w": 545,
+  "h": 314,
+  "file": "puzzle.svg",
+  "bg": "puzzle.bg.svg",
+  "s": "puzzle.s.svg",
+  "sbg": "puzzle.s.bg.svg",
+  "tags": "пазл пазлы головоломка задача решение логика команда сборка совместимость puzzle solution team"
+ },
+ {
+  "id": "coin",
+  "name": "Монета",
+  "w": 287,
+  "h": 189,
+  "file": "coin.svg",
+  "bg": "coin.bg.svg",
+  "s": "coin.s.svg",
+  "sbg": "coin.s.bg.svg",
+  "tags": "монета деньги финансы выплата прибыль доход бюджет цена coin money finance profit"
+ },
+ {
+  "id": "headphones",
+  "name": "Наушники",
+  "w": 889,
+  "h": 692,
+  "file": "headphones.svg",
+  "bg": "headphones.bg.svg",
+  "s": "headphones.s.svg",
+  "sbg": "headphones.s.bg.svg",
+  "tags": "наушники музыка звук подкаст аудио слушать плейлист music audio podcast sound"
+ },
+ {
+  "id": "lamp",
+  "name": "Лампа",
+  "w": 946,
+  "h": 1129,
+  "file": "lamp.svg",
+  "bg": "lamp.bg.svg",
+  "s": "lamp.s.svg",
+  "sbg": "lamp.s.bg.svg",
+  "tags": "лампа идея свет озарение работа стол вечер инсайт idea light lamp"
+ },
+ {
+  "id": "tulips",
+  "name": "Тюльпаны",
+  "w": 591,
+  "h": 748,
+  "file": "tulips.svg",
+  "bg": "tulips.bg.svg",
+  "s": "tulips.s.svg",
+  "sbg": "tulips.s.bg.svg",
+  "tags": "тюльпаны цветы весна рост забота подарок праздник женский красота flowers spring growth gift"
+ },
+ {
+  "id": "wallet",
+  "name": "Кошелёк",
+  "w": 631,
+  "h": 397,
+  "file": "wallet.svg",
+  "bg": "wallet.bg.svg",
+  "s": "wallet.s.svg",
+  "sbg": "wallet.s.bg.svg",
+  "tags": "кошелёк кошелек накопления платеж оплата покупка карта сбережения wallet payment savings"
+ },
+ {
+  "id": "folder",
+  "name": "Папка",
+  "w": 1241,
+  "h": 659,
+  "file": "folder.svg",
+  "bg": "folder.bg.svg",
+  "s": "folder.s.svg",
+  "sbg": "folder.s.bg.svg",
+  "tags": "папка документы файлы архив отчет договор бумаги работа folder documents files report"
+ },
+ {
+  "id": "pen",
+  "name": "Ручка",
+  "w": 509,
+  "h": 286,
+  "file": "pen.svg",
+  "bg": "pen.bg.svg",
+  "s": "pen.s.svg",
+  "sbg": "pen.s.bg.svg",
+  "tags": "ручка письмо запись подпись заметки автор текст писать pen write note sign"
+ }
+]

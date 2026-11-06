@@ -1,0 +1,17 @@
+:root{--bg:#f4f3f8;--card:#fff;--line:#e2dff0;--ac:#7c65d8;--tx:#1b1830}
+*{box-sizing:border-box}body{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--tx);background:var(--bg);display:flex;height:100vh}
+aside{width:320px;overflow:auto;background:var(--card);border-right:1px solid var(--line);padding:16px}
+h1{font-size:17px;margin:0 0 12px}h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6b6786;margin:18px 0 8px}h2 small{font-weight:400}
+section+section{border-top:1px solid var(--line)}
+textarea,select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
+.row{display:flex;align-items:center;gap:8px;margin:8px 0}.row>span{width:64px;color:#6b6786;flex:none}.row select,.row input[type=range]{flex:1;min-width:0}
+button,.file{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 11px;font:inherit;cursor:pointer;display:inline-block}
+button:hover,.file:hover{border-color:var(--ac)}button.primary{background:var(--ac);color:#fff;border-color:var(--ac)}.file input{display:none}
+.seg{display:flex;gap:4px}.seg label{border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}.seg label:has(input:checked){background:#ece8fb;border-color:var(--ac)}.seg input{display:none}
+.chk{display:block;margin:8px 0}.hint{color:#b0462a;font-size:12px;min-height:16px;margin:6px 0 0}
+#lib{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+#lib button{padding:4px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px}#lib svg{width:100%;flex:1;min-height:0}
+main{flex:1;display:flex;flex-direction:column;min-width:0}#bar{display:flex;gap:6px;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line);flex-wrap:wrap}#bar .sp{flex:1}
+#bar button:disabled{opacity:.4;cursor:default}
+#stage{flex:1;display:grid;place-items:center;padding:20px;overflow:auto}#cvs{max-width:100%;max-height:100%;background:#fff;box-shadow:0 4px 24px #2b215a22;border-radius:6px;touch-action:none}
+@media(max-width:800px){body{flex-direction:column;height:auto}aside{width:100%}}

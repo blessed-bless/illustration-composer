@@ -172,5 +172,7 @@ $('#export').onclick = () => {
   const files = new Set(st.catalog.flatMap(o => [o.file, o.bg, o.s, o.sbg].filter(Boolean)));
   await Promise.all([...files].map(async f => { st.svg[f] = await (await fetch('catalog/' + f)).text(); }));
   fillPal(); renderLib(); render();
+  const q = new URLSearchParams(location.search);
+  if (q.get("q")) { $("#prompt").value = q.get("q"); if (q.get("mode") === "names") document.querySelector("[name=sc][value=names]").checked = true; compose(); }
   window.__st = st; // для отладки в консоли
 })();

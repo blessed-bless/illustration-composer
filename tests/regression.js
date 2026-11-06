@@ -41,6 +41,16 @@ await test('nearestRole handles shorthand, case and invalid color', () => {
   assert(nearestRole('not-a-color')===null,'invalid color accepted');
 });
 const catalog=await (await fetch('../catalog/manifest.json')).json();
+await test('All 40 catalog variants retain path data and geometry attributes',async()=>{
+  for(const o of catalog)for(const key of ['file','bg','s','sbg']){
+    const text=await(await fetch('../catalog/'+o[key])).text(),source=new DOMParser().parseFromString(text,'image/svg+xml');
+    const rendered=parse(renderObject(text,{dst:PALETTES.purple,mode:key.includes('bg')?'bg':'main'}).inner);
+    const attrs=['d','x','y','width','height','points','cx','cy','r','rx','ry','stroke-width'];
+    const geometry=d=>[...d.querySelectorAll('path,rect,circle,ellipse,line,polyline,polygon')].map(e=>[e.localName,...attrs.map(a=>e.getAttribute(a))]);
+    assert(JSON.stringify(geometry(source))===JSON.stringify(geometry(rendered)),o[key]+' geometry changed');
+    assert(!rendered.querySelector('parsererror'),o[key]+' invalid XML');
+  }
+});
 const originalFetch=globalThis.fetch;
 await test('LLM validates IDs, deduplicates, respects noBg and model',async()=>{
   globalThis.fetch=async(url,init)=>{assert(JSON.parse(init.body).model==='claude-haiku-5-5','model changed'); return new Response(JSON.stringify({content:[{text:JSON.stringify({main:['coin','coin'],bg:['wallet','coin','missing'],why:'test'})}]}));};

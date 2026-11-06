@@ -50,3 +50,24 @@ npx --yes --package @playwright/cli playwright-cli -s=review run-code --filename
 ```
 
 Дополнительные проверки геометрии, перекраски и импорта: [tests/regression.html](tests/regression.html) через локальный сервер. Полный [отчёт по ТЗ](docs/AUDIT.md), [результаты Playwright](output/playwright/results.json), скриншоты и экспорт находятся в `output/playwright/`. Playwright CLI запускается отдельно через npx; зависимости приложения и сборка не добавлены.
+
+## Демонстрация
+- Видео (24 с): [docs/demo.mp4](docs/demo.mp4): два сценария, смена палитры, размер S, другой холст.
+- Живой сервис: https://blessed-bless.github.io/illustration-composer/
+- Готовые ссылки (параметры `q`, `mode=names`, `pal`, `size`, `canvas`), например:
+  `?q=рост через трудности&pal=orange&size=S&canvas=1080x1080`
+
+## Примеры собранных композиций
+Векторные SVG (без растровых вставок), собраны сервисом автоматически из исходных объектов; PNG рядом — просто превью.
+
+| Запрос | Палитра, размер | Файл |
+|---|---|---|
+| «рост через трудности» | фиолетовая, L, 1200×628 | [SVG](examples/01-rost-cherez-trudnosti.svg) · [PNG](examples/01-rost-cherez-trudnosti.png) |
+| «тишина и покой» | оранжевая, L, 1080×1080 | [SVG](examples/02-tishina-i-pokoy.svg) · [PNG](examples/02-tishina-i-pokoy.png) |
+| «деньги и безопасность» | бирюзовая, S, 800×600 | [SVG](examples/03-dengi-i-bezopasnost.svg) · [PNG](examples/03-dengi-i-bezopasnost.png) |
+
+## Использованные ИИ-инструменты
+- **Claude (Anthropic), Claude Code, модель Sonnet 5.5**: проектирование и написание кода, выгрузка SVG-библиотеки из Figma, сборка примеров и демо-видео.
+- **Codex (OpenAI)**: независимый аудит по ТЗ и доработка: безопасность импорта SVG, откат ИИ-режима, правки редактора, автотесты ([docs/AUDIT.md](docs/AUDIT.md)).
+- **Grok (xAI), `grok-4.5`**: необязательный ИИ-разбор метафор внутри сервиса (в проверке; также поддержан Claude Haiku 5.5, при пополненном балансе).
+- Figma: источник 10 иллюстраций и цветовых схем; результат выгрузки SVG не изменялся.

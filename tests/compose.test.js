@@ -22,13 +22,13 @@ test('Палитра принимает текстовые роли, откло�
 });
 test('ИИ: схема, дедупликация, noBg, max, модель и пустой bg',async t=>{
   let body;
-  t.mock.method(globalThis,'fetch',async(url,init)=>{body=JSON.parse(init.body);assert.equal(url,'https://api.anthropic.com/v1/messages');assert.ok(init.signal instanceof AbortSignal);return new Response(JSON.stringify({content:[{text:'```json\n'+JSON.stringify({main:['coin','coin','wallet','folder','pen','book','lamp'],bg:[]})+'\n```'}]}));});
-  const p=await pickByLLM('test',catalog,'fake',rng(1));assert.equal(body.model,'claude-haiku-5-5');assert.equal(p.main.length,4);assert.deepEqual(p.bg,[]);
+  t.mock.method(globalThis,'fetch',async(url,init)=>{body=JSON.parse(init.body);assert.equal(url,'https://api.anthropic.com/v1/messages');assert.ok(init.signal instanceof AbortSignal);return new Response(JSON.stringify({content:[{type:'text',text:'```json\n'+JSON.stringify({main:['coin','coin','wallet','folder','pen','book','lamp'],bg:[]})+'\n```'}]}));});
+  const p=await pickByLLM('test',catalog,'fake',rng(1));assert.equal(body.model,'claude-haiku-5-5');assert.equal(body.thinking?.type,'disabled');assert.equal(body.output_config?.effort,'low');assert.equal(p.main.length,4);assert.deepEqual(p.bg,[]);
 });
 test('ИИ: HTTP, JSON, отсутствующий content и неверная схема отклоняются',async t=>{
   let response;
   t.mock.method(globalThis,'fetch',async()=>response);
-  for(const r of [new Response('',{status:401}),new Response('not JSON'),new Response('{}'),new Response(JSON.stringify({content:[{text:'{"main":"coin"}'}]}))]){
+  for(const r of [new Response('',{status:401}),new Response('not JSON'),new Response('{}'),new Response(JSON.stringify({stop_reason:'refusal',content:[{type:'text',text:'{"main":["coin"]}'}]})),new Response(JSON.stringify({stop_reason:'max_tokens',content:[{type:'text',text:'{"main":["coin"]}'}]})),new Response(JSON.stringify({content:[{type:'thinking',text:'{"main":["coin"]}'}]})),new Response(JSON.stringify({content:[{type:'text',text:'{"main":"coin"}'}]}))]){
     response=r;await assert.rejects(pickByLLM('test',catalog,'fake',rng(1)));
   }
 });

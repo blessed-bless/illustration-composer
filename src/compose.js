@@ -26,7 +26,11 @@ function conceptScore(o, tokens) {
   }
   return s;
 }
-const bgPool = (catalog, main, rand) => catalog.filter(o => !main.includes(o) && !o.noBg).sort(() => rand() - 0.5);
+const bgPool = (catalog, main, rand) => {
+  const pool=catalog.filter(o=>!main.includes(o) && !o.noBg);
+  for (let i=pool.length-1;i>0;i--) { const j=Math.floor(rand()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  return pool;
+};
 
 // Сценарий 1 без LLM: теги + смысловые группы.
 export function pickByMetaphor(text, catalog, rand, nMain = 4, nBg = 3) {
@@ -55,7 +59,7 @@ export function pickByNames(text, catalog, rand, nBg = 3) {
 export async function pickByLLM(text, catalog, key, rand) {
   const list = catalog.map(o => `${o.id} — ${o.name} (${o.tags.split(' ').slice(0, 8).join(', ')})`).join('\n');
   const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
+    method: 'POST', signal: AbortSignal.timeout(15000),
     headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({
       model: 'claude-haiku-5-5', max_tokens: 400,
@@ -67,11 +71,13 @@ export async function pickByLLM(text, catalog, key, rand) {
   const data = await res.json();
   const raw = (data.content || []).map(c => c.text || '').join('');
   const j = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
-  const byId = id => catalog.find(o => o.id === id);
-  const main = (j.main || []).map(byId).filter(Boolean);
+  if (!j || !Array.isArray(j.main) || (j.bg!==undefined && !Array.isArray(j.bg)) || (j.why!==undefined && typeof j.why!=='string')) throw new Error('неверный формат ответа');
+  const byId=id=>catalog.find(o=>o.id===id);
+  const resolve=ids=>[...new Set(ids)].filter(id=>typeof id==='string').map(byId).filter(Boolean);
+  const main=resolve(j.main).slice(0,4);
   if (!main.length) throw new Error('пустой ответ');
-  const bg = (j.bg || []).map(byId).filter(o => o && !main.includes(o) && !o.noBg);
-  return { main, bg: bg.length ? bg : bgPool(catalog, main, rand).slice(0, 3), notes: j.why ? ['ИИ: ' + j.why] : [] };
+  const bg=resolve(j.bg||[]).filter(o=>!main.includes(o) && !o.noBg).slice(0,3);
+  return {main,bg,notes:j.why ? ['ИИ: '+j.why] : []};
 }
 
 // Раскладка: сначала случайные позиции с минимальным пересечением, затем «расталкивание» главных объектов.

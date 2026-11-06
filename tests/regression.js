@@ -72,13 +72,13 @@ await test('All 40 catalog variants retain path data and geometry attributes',as
 });
 const originalFetch=globalThis.fetch;
 await test('LLM validates IDs, deduplicates, respects noBg and model',async()=>{
-  globalThis.fetch=async(url,init)=>{assert(JSON.parse(init.body).model==='claude-haiku-5-5','model changed'); return new Response(JSON.stringify({content:[{text:JSON.stringify({main:['coin','coin'],bg:['wallet','coin','missing'],why:'test'})}]}));};
+  globalThis.fetch=async(url,init)=>{assert(JSON.parse(init.body).model==='claude-haiku-5-5','model changed'); return new Response(JSON.stringify({content:[{type:'text',text:JSON.stringify({main:['coin','coin'],bg:['wallet','coin','missing'],why:'test'})}]}));};
   const out=await pickByLLM('test',catalog.map(o=>({...o,noBg:o.id==='wallet'})),'fake',rng(1));
   assert(out.main.length===1 && out.bg.every(o=>o.id!=='wallet' && o.id!=='coin'),'invalid selection');
 });
 await test('LLM rejects malformed structure',async()=>{
   for (const value of [{main:'coin'},{main:[]},{main:['unknown']},{main:['coin'],bg:42},{main:['coin'],why:{x:1}}]) {
-    globalThis.fetch=async()=>new Response(JSON.stringify({content:[{text:JSON.stringify(value)}]}));
+    globalThis.fetch=async()=>new Response(JSON.stringify({content:[{type:'text',text:JSON.stringify(value)}]}));
     let bad=false;try{await pickByLLM('test',catalog,'fake',rng(1));}catch{bad=true;}assert(bad,'invalid LLM response accepted');
   }
 });

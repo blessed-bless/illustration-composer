@@ -117,7 +117,7 @@ async (page) => {
     for(const kind of ['valid','http','json','shape','network','timeout']){
       await page.route(url,async route=>{
         if(kind==='network'||kind==='timeout')return route.abort(kind==='timeout'?'timedout':'failed');
-        const body=kind==='json'?'garbage':JSON.stringify({content:[{text:JSON.stringify(kind==='shape'?{main:42}:{main:['coin','wallet'],bg:[],why:'Тест'})}]});
+        const body=kind==='json'?'garbage':JSON.stringify({content:[{type:'text',text:JSON.stringify(kind==='shape'?{main:42}:{main:['coin','wallet'],bg:[],why:'Тест'})}]});
         await route.fulfill({status:kind==='http'?401:200,contentType:'application/json',body});
       });
       await build('деньги и безопасность');const s=await state(),note=await page.locator('#notes').textContent();
@@ -130,7 +130,7 @@ async (page) => {
     const url='https://api.anthropic.com/v1/messages';let release,ready;
     const requested=new Promise(resolve=>ready=resolve);
     await page.evaluate(()=>localStorage.setItem('claude_key','fake-test-key'));
-    await page.route(url,async route=>{await new Promise(resolve=>{release=resolve;ready();});await route.fulfill({contentType:'application/json',body:JSON.stringify({content:[{text:'{"main":["coin"],"bg":[]}' }]})});});
+    await page.route(url,async route=>{await new Promise(resolve=>{release=resolve;ready();});await route.fulfill({contentType:'application/json',body:JSON.stringify({content:[{type:'text',text:'{"main":["coin"],"bg":[]}' }]})});});
     await page.locator('#prompt').fill('деньги');await page.locator('#gen').click();await requested;
     await page.locator('#lib button').filter({hasText:'Монета'}).click();const added=(await selected()).uid;
     const response=page.waitForResponse(url);release();await(await response).finished();

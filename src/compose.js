@@ -74,15 +74,19 @@ export async function pickByLLM(text, catalog, key, rand, opts = {}) {
     if (!ch || (ch.finish_reason && ch.finish_reason !== 'stop')) throw new Error('незавершённый ответ');
     raw = String(ch.message?.content || '');
   } else {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const post = body => fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', signal: AbortSignal.timeout(15000),
       headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: 'claude-haiku-5-5', max_tokens: 400, thinking: { type: 'disabled' }, output_config: { effort: 'low' },
-        system: SYSTEM, messages: [{ role: 'user', content: user }],
-      }),
+      body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error('API ' + res.status);
+    const base = { model: opts.model || 'claude-haiku-5-5', system: SYSTEM, messages: [{ role: 'user', content: user }] };
+    let res = await post({ ...base, max_tokens: 400, thinking: { type: 'disabled' }, output_config: { effort: 'low' } });
+    // 400 чаще всего из-за необязательных параметров (thinking/effort) — пробуем простой запрос
+    if (res.status === 400) res = await post({ ...base, max_tokens: 1024 });
+    if (!res.ok) {
+      let msg = ''; try { msg = (await res.json()).error?.message || ''; } catch {}
+      throw new Error('API ' + res.status + (msg ? ': ' + msg.slice(0, 140) : ''));
+    }
     const data = await res.json();
     if (data.stop_reason && data.stop_reason !== 'end_turn') throw new Error('незавершённый ответ: ' + data.stop_reason);
     raw = (data.content || []).filter(x => x.type === 'text').map(x => x.text || '').join('');

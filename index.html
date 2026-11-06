@@ -7,7 +7,7 @@
   <textarea id="prompt" aria-label="Метафора или компоненты" rows="3" placeholder="Например: «обучение и новые знания»"></textarea>
   <label class="chk"><input type="checkbox" id="useBg" checked> Фоновые объекты</label>
   <div class="row"><button id="gen" class="primary">Собрать</button><button id="shuffle" title="Новая раскладка">Перемешать</button></div>
-  <details class="ai"><summary>ИИ-разбор метафор (необязательно)</summary><input id="apiKey" aria-label="Ключ API" type="password" placeholder="Ключ Claude или Grok (xAI)" autocomplete="off"><input id="llmModel" aria-label="Модель Grok (необязательно)" placeholder="Модель Grok, по умолчанию grok-4.5" autocomplete="off"><small>Ключ хранится только в этом браузере и уходит только провайдеру: api.anthropic.com для Claude, api.x.ai для ключей grok_/xai-. Без ключа работает локальный подбор.</small></details>
+  <details class="ai"><summary>ИИ-разбор метафор (необязательно)</summary><input id="apiKey" aria-label="Ключ API" type="password" placeholder="Ключ Claude или Grok (xAI)" autocomplete="off"><input id="llmModel" aria-label="Модель (необязательно)" placeholder="Модель (по умолчанию: claude-haiku-5-5 или grok-4.5)" autocomplete="off"><small>Ключ хранится только в этом браузере и уходит только провайдеру: api.anthropic.com для Claude, api.x.ai для ключей grok_/xai-. Без ключа работает локальный подбор.</small></details>
   <p id="notes" role="status" aria-live="polite" class="hint"></p></section>
  <section><h2>Параметры</h2>
   <div class="row"><span>Размер</span><div class="seg"><label><input type="radio" name="sz" value="L" checked> L</label><label><input type="radio" name="sz" value="S"> S</label></div></div>

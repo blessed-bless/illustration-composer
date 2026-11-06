@@ -103,7 +103,7 @@ async (page) => {
     const analysis=await page.evaluate(text=>{
       const d=new DOMParser().parseFromString(text,'image/svg+xml'),ids=[...d.querySelectorAll('[id]')].map(e=>e.id);
       const refs=[...text.matchAll(/url\(#([^)]+)\)/g)].map(m=>m[1]);
-      return {parseError:!!d.querySelector('parsererror'),unique:new Set(ids).size===ids.length,refs:refs.every(id=>ids.includes(id)),ui:!!d.querySelector('[data-uid],[data-editor],[data-handle],[stroke="#2b7cff"],script,foreignObject,image'),paths:d.querySelectorAll('path').length,clip:d.querySelectorAll('clipPath').length};
+      return {parseError:!!d.querySelector('parsererror'),unique:new Set(ids).size===ids.length,refs:refs.every(id=>ids.includes(id)),ui:!!d.querySelector('[data-uid],[data-editor],[data-handle],[stroke="#2b7cff"],rect[fill="transparent"],[pointer-events="none"],script,foreignObject,image'),paths:d.querySelectorAll('path').length,clip:d.querySelectorAll('clipPath').length};
     },text);
     assert(!analysis.parseError&&analysis.unique&&analysis.refs&&!analysis.ui&&analysis.paths>0,'invalid export '+JSON.stringify(analysis));
     const isolated=await page.context().browser().newContext({viewport:{width:1000,height:800}}),preview=await isolated.newPage();
@@ -126,6 +126,18 @@ async (page) => {
     }
     await page.evaluate(()=>localStorage.removeItem('claude_key'));
   });
+  await test('Запоздавший ответ ИИ не отменяет ручное добавление',async()=>{
+    const url='https://api.anthropic.com/v1/messages';let release,ready;
+    const requested=new Promise(resolve=>ready=resolve);
+    await page.evaluate(()=>localStorage.setItem('claude_key','fake-test-key'));
+    await page.route(url,async route=>{await new Promise(resolve=>{release=resolve;ready();});await route.fulfill({contentType:'application/json',body:JSON.stringify({content:[{text:'{"main":["coin"],"bg":[]}' }]})});});
+    await page.locator('#prompt').fill('деньги');await page.locator('#gen').click();await requested;
+    await page.locator('#lib button').filter({hasText:'Монета'}).click();const added=(await selected()).uid;
+    const response=page.waitForResponse(url);release();await(await response).finished();
+    await page.waitForFunction(()=>!document.querySelector('#gen').disabled);
+    assert((await state()).items.some(i=>i.uid===added),'late response overwrote user edit');
+    await page.unroute(url);await page.evaluate(()=>localStorage.removeItem('claude_key'));
+  });
   await test('Загрузка SVG: CSS/скрипты/ссылки отклоняются без выполнения',async()=>{
     const n=(await state()).catalog.length;
     for(const body of ['<script>window.__pwn=1</script>','<style>body{display:none}</style>','<use href="https://example.com/x.svg#a"/>','<path onload="window.__pwn=1"/>']){
@@ -137,7 +149,14 @@ async (page) => {
     await page.locator('#svgFile').setInputFiles({name:'safe.svg',mimeType:'image/svg+xml',buffer:Buffer.from(safe)});
     await page.waitForFunction(n=>window.__st.catalog.length===n+1,n);await page.locator('#lib button').filter({hasText:'safe'}).click();await click('dup');
     const ids=await page.locator('#cvs [id]').evaluateAll(es=>es.map(e=>e.id));assert(new Set(ids).size===ids.length,'copied import ID collision');await snap('08-import-safe');
+    const pending=page.waitForEvent('download');await page.locator('#export').click();await(await pending).saveAs('output/playwright/imported-composition.svg');
+    const preview=await page.context().newPage();await preview.goto('http://localhost:5173/output/playwright/imported-composition.svg');
+    const valid=await preview.evaluate(()=>{
+      const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);
+      return new Set(ids).size===ids.length && [...document.querySelectorAll('use')].every(e=>ids.includes(e.getAttribute('href').slice(1))) && !document.querySelector('parsererror,[data-editor],[data-uid]');
+    });assert(valid,'imported SVG export references broken');await preview.screenshot({path:'output/playwright/09-export-imported.png'});await preview.close();
   });
   await test('Ошибки JS в браузере',()=>assert(errors.length===0,errors.join(';')));
-  return {passed:results.filter(r=>r.pass).length,failed:results.filter(r=>!r.pass).length,results};
+  if (results.some(r=>!r.pass)) throw Error(JSON.stringify(results.filter(r=>!r.pass)));
+  return {passed:results.filter(r=>r.pass).length,failed:0,results};
 }

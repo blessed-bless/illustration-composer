@@ -23,10 +23,29 @@ await test('Inline style paints follow palette', () => {
   const d=parse(render(svg('<path style="fill:#7864D7;stroke:#181817;stroke-width:2" d="M0 0L10 10"/>')).inner);
   assert(d.querySelector('path').getAttribute('fill')===PALETTES.orange.m3,'style bypasses recolor');
 });
+await test('Implicit gradient stop and currentColor follow ink role',()=>{
+  const dst={...PALETTES.orange,ink:'#123456'};
+  const d=parse(render(svg('<defs><linearGradient id="p"><stop offset="0"/></linearGradient></defs><path fill="currentColor" d="M0 0h10"/>'),{dst}).inner);
+  assert(d.querySelector('stop').getAttribute('stop-color')==='#123456','default gradient black escaped palette');
+  assert(d.querySelector('[color="#123456"]'),'default currentColor escaped palette');
+});
+await test('SVG absolute length units and zero dimensions',()=>{
+  const r=render('<svg xmlns="http://www.w3.org/2000/svg" width="1in" height="25.4mm"><rect width="80" height="80"/></svg>');
+  assert(Math.abs(r.w-96)<0.001&&Math.abs(r.h-96)<0.001,'physical units treated as px');
+  for(const width of ['0','-1','100%']){let bad=false;try{render(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="100"/>`);}catch{bad=true;}assert(bad,'ambiguous or invalid dimensions accepted');}
+});
+await test('Imported SVG keeps its viewport for percentage geometry',()=>{
+  const r=render('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%"/></svg>');
+  const outer=document.createElementNS('http://www.w3.org/2000/svg','svg');outer.setAttribute('width','800');outer.setAttribute('height','600');outer.innerHTML=r.inner;document.body.append(outer);
+  const box=outer.querySelector('rect').getBBox();outer.remove();assert(box.width===100&&box.height===100,'child % lengths use canvas viewport');
+  const a=render('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="none"><circle r="20" cx="50" cy="50"/></svg>');
+  assert(a.w===200&&a.h===100&&a.inner.includes('preserveAspectRatio="none"'),'explicit viewport aspect ratio lost');
+});
 for (const [name, text] of Object.entries({
   script:svg('<script>alert(1)</script>'), event:'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><path/></svg>',
   js:svg('<use href="javascript:alert(1)"/>'), external:svg('<use href="https://example.com/x.svg#a"/>'),
   image:svg('<image href="data:image/svg+xml,evil"/>'), css:svg('<style>body{display:none}</style>'),
+  mask:svg('<defs><mask id="m"><rect width="10" height="10" fill="white"/></mask></defs><path mask="url(#m)"/>'),
   cssURL:svg('<path style="fill:url(https://example.com/x)"/>'), html:'<html xmlns="http://www.w3.org/1999/xhtml"><img src="x" onerror="alert(1)"/></html>',
 })) await test(`Reject unsafe SVG: ${name}`, () => { let rejected=false; try {render(text);} catch {rejected=true;} assert(rejected,'unsafe input accepted'); });
 await test('Palette rejects null, empty objects and invalid colors', () => {

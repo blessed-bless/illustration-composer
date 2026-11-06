@@ -24,10 +24,10 @@ export function nearestRole(color, pal = SOURCE) {
   return best;
 }
 // Reject active content and unsupported CSS rather than silently change its drawing.
-const TAGS=new Set('svg g path rect circle ellipse line polyline polygon defs clipPath mask linearGradient radialGradient stop pattern marker symbol use title desc text tspan'.split(' '));
+const TAGS=new Set('svg g path rect circle ellipse line polyline polygon defs clipPath linearGradient radialGradient stop pattern marker symbol use title desc text tspan'.split(' '));
 const PAINT=new Set(['fill','stroke','stop-color','color']);
-const PRESENT=new Set('fill stroke stop-color color fill-rule clip-rule opacity fill-opacity stroke-opacity stop-opacity stroke-width stroke-linecap stroke-linejoin stroke-miterlimit stroke-dasharray stroke-dashoffset clip-path mask marker-start marker-mid marker-end vector-effect font-size font-family font-weight text-anchor dominant-baseline'.split(' '));
-const ATTRS=new Set([...PRESENT,...'id d x y x1 y1 x2 y2 cx cy r rx ry dx dy width height points transform viewBox preserveAspectRatio gradientUnits gradientTransform spreadMethod offset fx fy fr patternUnits patternContentUnits patternTransform markerWidth markerHeight refX refY orient markerUnits clipPathUnits maskUnits maskContentUnits href data-detail data-role'.split(' ')]);
+const PRESENT=new Set('fill stroke stop-color color fill-rule clip-rule opacity fill-opacity stroke-opacity stop-opacity stroke-width stroke-linecap stroke-linejoin stroke-miterlimit stroke-dasharray stroke-dashoffset clip-path marker-start marker-mid marker-end vector-effect font-size font-family font-weight text-anchor dominant-baseline'.split(' '));
+const ATTRS=new Set([...PRESENT,...'id d x y x1 y1 x2 y2 cx cy r rx ry dx dy width height points transform viewBox preserveAspectRatio gradientUnits gradientTransform spreadMethod offset fx fy fr patternUnits patternContentUnits patternTransform markerWidth markerHeight refX refY orient markerUnits clipPathUnits href data-detail data-role'.split(' ')]);
 let serial=0;
 export function renderObject(svgText, { dst, mode='main', detail='L', src=SOURCE, prefix='svg-'+(++serial) }) {
   if (typeof svgText!=='string' || svgText.length>2_000_000 || /<!DOCTYPE|<\?/i.test(svgText.replace(/^\s*<\?xml[^?]*\?>/i,''))) throw new Error('Неподдерживаемый SVG');
@@ -83,6 +83,8 @@ export function renderObject(svgText, { dst, mode='main', detail='L', src=SOURCE
     }
   }
   if (!root.hasAttribute('fill')) root.setAttribute('fill','#000000');
+  if (!root.hasAttribute('color')) root.setAttribute('color','#000000');
+  for (const el of nodes) if (el.localName==='stop' && !el.hasAttribute('stop-color')) el.setAttribute('stop-color','#000000');
   for (const el of nodes) for (const a of PAINT) {
     const raw=el.getAttribute(a); if (raw===null) continue;
     const c=norm(raw);
@@ -96,14 +98,19 @@ export function renderObject(svgText, { dst, mode='main', detail='L', src=SOURCE
   const vb=(root.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(Number);
   const valid=vb.length===4 && vb.every(Number.isFinite) && vb[2]>0 && vb[3]>0;
   if (root.hasAttribute('viewBox') && !valid) throw new Error('Некорректный viewBox');
-  const w=valid ? vb[2] : parseFloat(root.getAttribute('width'))||100;
-  const h=valid ? vb[3] : parseFloat(root.getAttribute('height'))||100;
+  const length=(value,fallback)=>{
+    if (value===null) return fallback;
+    const m=value.trim().match(/^(\d*\.?\d+(?:e[+-]?\d+)?)\s*(px|in|cm|mm|q|pt|pc)?$/i);
+    if (!m) throw new Error('Нужен абсолютный размер SVG или viewBox');
+    return +m[1]*({px:1,in:96,cm:96/2.54,mm:96/25.4,q:96/101.6,pt:96/72,pc:16}[m[2]?.toLowerCase()||'px']);
+  };
+  const dimension=(attr,fallback)=>{const v=root.getAttribute(attr);return valid && /%$/.test(v||'') ? fallback : length(v,fallback);};
+  const w=dimension('width',valid ? vb[2] : 300);
+  const h=dimension('height',valid ? vb[3] : 150);
   if (!(w>0 && h>0 && Number.isFinite(w) && Number.isFinite(h))) throw new Error('Некорректный размер SVG');
-  const group=doc.createElementNS(NS,'g');
-  for (const at of root.attributes) if (PRESENT.has(at.name) || ['transform','id'].includes(at.name)) group.setAttribute(at.name,at.value);
-  while (root.firstChild) group.append(root.firstChild);
-  const wrap=doc.createElementNS(NS,'g');
-  if (valid && (vb[0]||vb[1])) wrap.setAttribute('transform','translate('+(-vb[0])+' '+(-vb[1])+')');
-  wrap.append(group);
-  return {inner:new XMLSerializer().serializeToString(wrap),w,h};
+  // Keep a local viewport: percentages must not become relative to the whole composition.
+  root.setAttribute('width',w);root.setAttribute('height',h);
+  root.setAttribute('x','0');root.setAttribute('y','0');
+  if (!valid) root.setAttribute('viewBox','0 0 '+w+' '+h);
+  return {inner:new XMLSerializer().serializeToString(root),w,h};
 }

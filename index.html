@@ -7,11 +7,13 @@
   <textarea id="prompt" rows="3" placeholder="Например: «обучение и новые знания»"></textarea>
   <label class="chk"><input type="checkbox" id="useBg" checked> Фоновые объекты</label>
   <div class="row"><button id="gen" class="primary">Собрать</button><button id="shuffle" title="Новая раскладка">Перемешать</button></div>
+  <details class="ai"><summary>ИИ-разбор метафор (необязательно)</summary><input id="apiKey" type="password" placeholder="Ключ Claude API" autocomplete="off"><small>Ключ хранится только в этом браузере и уходит только в api.anthropic.com. Без ключа работает локальный подбор.</small></details>
   <p id="notes" class="hint"></p></section>
  <section><h2>Параметры</h2>
   <div class="row"><span>Размер</span><div class="seg"><label><input type="radio" name="sz" value="L" checked> L</label><label><input type="radio" name="sz" value="S"> S</label></div></div>
   <div class="row"><span>Палитра</span><select id="pal"></select></div>
-  <div class="row"><span></span><label class="file">Загрузить палитру (JSON)<input type="file" id="palFile" accept=".json,application/json"></label></div>
+  <div class="row"><span></span><label class="file">Загрузить палитру (JSON / текст с цветами)<input type="file" id="palFile" accept=".json,application/json"></label></div>
+  <div class="row"><span></span><small class="hint2">Порядок цветов в списке: фон, 3 основных от светлого к тёмному, 3 акцента. Пример: palettes/example.json</small></div>
   <div class="row"><span>Холст</span><select id="cv"><option value="800x600">800 × 600</option><option value="1080x1080">1080 × 1080</option><option value="1200x628">1200 × 628</option><option value="600x800">600 × 800</option></select></div>
   <div class="row"><span>Масштаб</span><input type="range" id="gs" min="0.5" max="1.6" step="0.05" value="1"></div></section>
  <section><h2>Библиотека <small id="cnt"></small></h2><div id="lib"></div>

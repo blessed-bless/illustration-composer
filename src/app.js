@@ -115,7 +115,7 @@ async function compose(shuffle=false) {
   try { key = localStorage.getItem('claude_key') || ''; } catch {}
   if (scen === 'metaphor' && key) {
     notes.textContent = 'ИИ разбирает метафору…';
-    try { pick = await pickByLLM(text, st.catalog, key, rand); }
+    try { pick = await pickByLLM(text, st.catalog, key, rand, { model: (localStorage.getItem('llm_model') || '').trim() || undefined }); }
     catch (err) { pick = pickByMetaphor(text, st.catalog, rand); pick.notes.unshift('ИИ недоступен (' + err.message + '), использован локальный подбор.'); }
   } else pick = (scen === 'names' ? pickByNames : pickByMetaphor)(text, st.catalog, rand);
   if (version!==composeVersion) return;
@@ -255,6 +255,9 @@ $('#export').onclick = () => {
 
 const keyEl = $("#apiKey");
 try { keyEl.value = localStorage.getItem("claude_key") || ""; } catch {}
+const modelEl = $("#llmModel");
+try { modelEl.value = localStorage.getItem("llm_model") || ""; } catch {}
+modelEl.onchange = () => { try { localStorage.setItem("llm_model", modelEl.value.trim()); } catch {} };
 keyEl.onchange = () => { try { localStorage.setItem("claude_key", keyEl.value.trim()); } catch {} };
 // --- старт
 (async () => {

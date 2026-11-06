@@ -42,3 +42,14 @@ test('ИИ: истечение 15 секунд прерывает fetch',async t
   }));
   await assert.rejects(pickByLLM('test',catalog,'fake',rng(1)),{name:'TimeoutError'});
 });
+
+test('ИИ: ключ xAI идёт в api.x.ai с Bearer, ответ разбирается, неполный отклоняется',async t=>{
+  let seen;
+  t.mock.method(globalThis,'fetch',async(url,init)=>{seen={url,init,body:JSON.parse(init.body)};return new Response(JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify({main:['coin','wallet'],bg:['book'],why:'деньги'})}}]}));});
+  const p=await pickByLLM('деньги',catalog,'grok_fake',rng(1),{model:'grok-test'});
+  assert.equal(seen.url,'https://api.x.ai/v1/chat/completions');assert.equal(seen.init.headers.authorization,'Bearer grok_fake');
+  assert.equal(seen.body.model,'grok-test');assert.deepEqual(p.main.map(o=>o.id),['coin','wallet']);assert.deepEqual(p.bg.map(o=>o.id),['book']);
+  globalThis.fetch.mock.restore();
+  t.mock.method(globalThis,'fetch',async()=>new Response(JSON.stringify({choices:[{finish_reason:'length',message:{content:'{"main":["coin"]}'}}]})));
+  await assert.rejects(()=>pickByLLM('x',catalog,'xai-fake',rng(1)));
+});

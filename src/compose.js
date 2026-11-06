@@ -56,21 +56,37 @@ export function pickByNames(text, catalog, rand, nBg = 3) {
 
 // Сценарий 1 с ИИ: Claude сам разбирает метафору и выбирает объекты из каталога.
 // Ключ вводит пользователь и хранится только в его браузере (запрос идёт напрямую в API).
-export async function pickByLLM(text, catalog, key, rand) {
+export async function pickByLLM(text, catalog, key, rand, opts = {}) {
   const list = catalog.map(o => `${o.id} — ${o.name} (${o.tags.split(' ').slice(0, 8).join(', ')})`).join('\n');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', signal: AbortSignal.timeout(15000),
-    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({
-      model: 'claude-haiku-5-5', max_tokens: 400, thinking: {type:'disabled'}, output_config: {effort:'low'},
-      system: 'Ты подбираешь иллюстративные объекты для композиции под метафору или заголовок. Выбирай ТОЛЬКО id из списка. Отвечай одним JSON без пояснений: {"main":[3-4 id главных объектов, самые образные],"bg":[2-3 id фоновых],"why":"одна фраза"}.',
-      messages: [{ role: 'user', content: `Метафора/заголовок: «${text}»\n\nДоступные объекты:\n${list}` }],
-    }),
-  });
-  if (!res.ok) throw new Error('API ' + res.status);
-  const data = await res.json();
-  if (data.stop_reason && data.stop_reason!=='end_turn') throw new Error('незавершённый ответ: '+data.stop_reason);
-  const raw = (data.content || []).filter(c=>c.type==='text').map(c => c.text || '').join('');
+  const user = `Метафора/заголовок: «${text}»\n\nДоступные объекты:\n${list}`;
+  const SYSTEM = 'Ты подбираешь иллюстративные объекты для композиции под метафору или заголовок. Выбирай ТОЛЬКО id из списка. Отвечай одним JSON без пояснений: {"main":[3-4 id главных объектов, самые образные],"bg":[2-3 id фоновых],"why":"одна фраза"}.';
+  // Провайдер определяется по ключу: ключи xAI начинаются с grok_ или xai-, остальные считаются ключами Claude.
+  const xai = /^(grok_|xai-)/.test(key);
+  let raw;
+  if (xai) {
+    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST', signal: AbortSignal.timeout(15000),
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key },
+      body: JSON.stringify({ model: opts.model || 'grok-4.5', temperature: 0.2, max_tokens: 400, messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: user }] }),
+    });
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data = await res.json(), ch = (data.choices || [])[0];
+    if (!ch || (ch.finish_reason && ch.finish_reason !== 'stop')) throw new Error('незавершённый ответ');
+    raw = String(ch.message?.content || '');
+  } else {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: AbortSignal.timeout(15000),
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-haiku-5-5', max_tokens: 400, thinking: { type: 'disabled' }, output_config: { effort: 'low' },
+        system: SYSTEM, messages: [{ role: 'user', content: user }],
+      }),
+    });
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data = await res.json();
+    if (data.stop_reason && data.stop_reason !== 'end_turn') throw new Error('незавершённый ответ: ' + data.stop_reason);
+    raw = (data.content || []).filter(x => x.type === 'text').map(x => x.text || '').join('');
+  }
   const j = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
   if (!j || !Array.isArray(j.main) || (j.bg!==undefined && !Array.isArray(j.bg)) || (j.why!==undefined && typeof j.why!=='string')) throw new Error('неверный формат ответа');
   const byId=id=>catalog.find(o=>o.id===id);

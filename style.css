@@ -1,3 +1,4 @@
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,#cvs:focus-visible{outline:2px solid #2b7cff;outline-offset:3px}.seg label:focus-within,.file:focus-within{outline:2px solid #2b7cff;outline-offset:2px}
 :root{--bg:#f4f3f8;--card:#fff;--line:#e2dff0;--ac:#7c65d8;--tx:#1b1830}
 *{box-sizing:border-box}body{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--tx);background:var(--bg);display:flex;height:100vh}
 aside{width:320px;overflow:auto;background:var(--card);border-right:1px solid var(--line);padding:16px}
@@ -6,8 +7,8 @@ section+section{border-top:1px solid var(--line)}
 textarea,select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
 .row{display:flex;align-items:center;gap:8px;margin:8px 0}.row>span{width:64px;color:#6b6786;flex:none}.row select,.row input[type=range]{flex:1;min-width:0}
 button,.file{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 11px;font:inherit;cursor:pointer;display:inline-block}
-button:hover,.file:hover{border-color:var(--ac)}button.primary{background:var(--ac);color:#fff;border-color:var(--ac)}.file input{display:none}
-.seg{display:flex;gap:4px}.seg label{border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}.seg label:has(input:checked){background:#ece8fb;border-color:var(--ac)}.seg input{display:none}
+button:hover,.file:hover{border-color:var(--ac)}button.primary{background:var(--ac);color:#fff;border-color:var(--ac)}.file{position:relative}.file input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.seg{display:flex;gap:4px}.seg label{border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer}.seg label:has(input:checked){background:#ece8fb;border-color:var(--ac)}.seg input{position:absolute;width:1px;height:1px;opacity:0}
 .chk{display:block;margin:8px 0}.hint{color:#b0462a;font-size:12px;min-height:16px;margin:6px 0 0}
 #lib{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
 #lib button{padding:4px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px}#lib svg{width:100%;flex:1;min-height:0}

@@ -20,14 +20,18 @@ const draw = (o, mode, prefix) => {
 const baseK = n => Math.sqrt(st.W * st.H / Math.max(n, 3)) * 0.9 / 900; // px на единицу исходного рисунка
 
 const history=[];
+function cancelCompose() {
+  composeVersion++;composing=false;$('#gen').disabled=$('#shuffle').disabled=false;
+}
 function save() {
+  if (composing) {cancelCompose();$('#notes').textContent='Автосборка отменена ручным изменением.';}
   const snapshot=JSON.stringify({size:st.size,palId:st.palId,W:st.W,H:st.H,gs:st.gs,items:st.items,sel:st.sel,seed:st.seed});
   if (history.at(-1)!==snapshot) history.push(snapshot);
   if (history.length>60) history.shift();
 }
 function undo() {
   if (!history.length) return;
-  composeVersion++; drag=null;
+  cancelCompose(); drag=null;
   Object.assign(st,JSON.parse(history.pop()));
   renderLib(); render();
 }
@@ -65,7 +69,7 @@ function buildSvg(exp) {
     g += `<g data-uid="${it.uid}" style="cursor:move" transform="${tf(it, w, h, s)}"><rect width="${w}" height="${h}" fill="transparent"/>${inner}</g>`;
     if (it.uid === st.sel) g += `<rect transform="${tf(it, w, h, s)}" width="${w}" height="${h}" fill="none" stroke="#2b7cff" stroke-width="${(2 / s).toFixed(2)}" stroke-dasharray="${(6 / s).toFixed(1)}" pointer-events="none"/>`;
   }
-  return `<defs><clipPath id="cv-clip"><rect width="${st.W}" height="${st.H}"/></clipPath></defs><rect width="${st.W}" height="${st.H}" fill="${palette().canvas}"/><g clip-path="url(#cv-clip)">${g}</g>${exp ? '' : groupControls()}`;
+  return `<defs><clipPath id="cv-clip" clipPathUnits="userSpaceOnUse"><rect width="${st.W}" height="${st.H}"/></clipPath></defs><rect width="${st.W}" height="${st.H}" fill="${palette().canvas}"/><g clip-path="url(#cv-clip)">${g}</g>${exp ? '' : groupControls()}`;
 }
 
 function render() {
@@ -114,8 +118,8 @@ async function compose(shuffle=false) {
     try { pick = await pickByLLM(text, st.catalog, key, rand); }
     catch (err) { pick = pickByMetaphor(text, st.catalog, rand); pick.notes.unshift('ИИ недоступен (' + err.message + '), использован локальный подбор.'); }
   } else pick = (scen === 'names' ? pickByNames : pickByMetaphor)(text, st.catalog, rand);
-  composing=false; $('#gen').disabled=$('#shuffle').disabled=false;
   if (version!==composeVersion) return;
+  composing=false; $('#gen').disabled=$('#shuffle').disabled=false;
   notes.textContent = pick.notes.join(' ');
   if (!pick.main.length) return;
   const useBg = $('#useBg').checked;
@@ -124,7 +128,7 @@ async function compose(shuffle=false) {
   const main = pick.main.map(o => makeItem(o, 'main', n));
   // фон раскладывается первым и лежит под главными объектами
   layout(bg, st.W, st.H, rand); layout(main, st.W, st.H, rand); relax(main);
-  save(); st.gs=1;
+  save(); drag=null; st.gs=1;
   st.items = [...bg, ...main];
   fit(st.items, st.W, st.H, 0.88, main);
   st.sel = null;
@@ -140,6 +144,7 @@ function pt(e) {
 $('#cvs').addEventListener('pointerdown', e => {
   if (e.button!==0) return;
   const handle=e.target.closest('[data-handle]'),g=e.target.closest('[data-uid]'),p=pt(e);
+  if ((handle||g) && composing) {cancelCompose();$('#notes').textContent='Автосборка отменена ручным изменением.';}
   if (handle) {
     save();
     drag={kind:handle.dataset.handle,p,gs:st.gs,items:structuredClone(st.items),angle:Math.atan2(p.y-st.H/2,p.x-st.W/2),distance:Math.max(1,Math.hypot(p.x-st.W/2,p.y-st.H/2))};

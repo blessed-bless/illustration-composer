@@ -9,13 +9,23 @@ export const PALETTES = {
 export const SOURCE = PALETTES.purple; // в какой схеме нарисованы исходные SVG
 const ORDER = ['m1','m2','m3','a1','a2','a3','b1','b2'];
 // Принимает {name, canvas, m1..}, либо массив hex-цветов (раскладывается по ролям).
-export function parsePalette(json, base) {
+export function parsePalette(json, base = SOURCE) {
   const ok = c => typeof c === 'string' && /^#?[0-9a-f]{3}([0-9a-f]{3})?$/i.test(c.trim());
-  const fix = c => (c.trim().startsWith('#') ? c.trim() : '#' + c.trim());
-  const out = { ...base, name: 'Загруженная' };
-  if (Array.isArray(json)) { const l = json.filter(ok); if (!l.length) throw new Error('нет hex-цветов');
-    out.canvas = fix(l[0]); l.slice(1).forEach((c,i)=>{ if (ORDER[i]) out[ORDER[i]] = fix(c); }); return out; }
-  if (json.name) out.name = String(json.name);
-  for (const k of ['canvas','ink','paper',...ORDER]) if (ok(json[k])) out[k] = fix(json[k]);
+  const fix = c => c.trim().startsWith('#') ? c.trim() : '#' + c.trim();
+  const out = { ...base, name:'Загруженная' };
+  if (Array.isArray(json)) {
+    if (!json.length || !json.every(ok)) throw new Error('нужен список hex-цветов');
+    out.canvas=fix(json[0]);
+    json.slice(1).forEach((c,i)=>{ if (ORDER[i]) out[ORDER[i]]=fix(c); });
+    if (json.length<=7) {out.b1=out.m1;out.b2=out.m3;}
+    return out;
+  }
+  if (!json || typeof json !== 'object') throw new Error('нужна палитра JSON');
+  const keys=['canvas','ink','paper',...ORDER].filter(k=>Object.hasOwn(json,k));
+  if (!keys.length || keys.some(k=>!ok(json[k]))) throw new Error('некорректные hex-цвета');
+  if (json.name) out.name=String(json.name);
+  for (const k of keys) out[k]=fix(json[k]);
+  if (!keys.includes('b1')) out.b1=out.m1;
+  if (!keys.includes('b2')) out.b2=out.m3;
   return out;
 }

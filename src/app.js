@@ -265,7 +265,16 @@ keyEl.onchange = () => { try { localStorage.setItem("claude_key", keyEl.value.tr
   const files = new Set(st.catalog.flatMap(o => [o.file, o.bg, o.s, o.sbg].filter(Boolean)));
   await Promise.all([...files].map(async f => { st.svg[f] = await (await fetch('catalog/' + f)).text(); }));
   fillPal(); renderLib(); render();
+  // Готовые ссылки: ?q=текст&mode=names&pal=orange&size=S&canvas=1080x1080&dump=1 (dump кладёт экспортный SVG в #dump)
   const q = new URLSearchParams(location.search);
-  if (q.get("q")) { $("#prompt").value = q.get("q"); if (q.get("mode") === "names") document.querySelector("[name=sc][value=names]").checked = true; compose(); }
+  if (st.pal[q.get('pal')]) { st.palId = q.get('pal'); $('#pal').value = st.palId; }
+  if (q.get('size') === 'S') { st.size = 'S'; document.querySelector('[name=sz][value=S]').checked = true; }
+  if (/^\d+x\d+$/.test(q.get('canvas') || '')) { [st.W, st.H] = q.get('canvas').split('x').map(Number); $('#cv').value = q.get('canvas'); }
+  renderLib(); render();
+  if (q.get("q")) {
+    $("#prompt").value = q.get("q"); if (q.get("mode") === "names") document.querySelector("[name=sc][value=names]").checked = true;
+    await compose();
+    if (q.get('dump')) { const pre = document.createElement('pre'); pre.id = 'dump'; pre.textContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${st.W}" height="${st.H}" viewBox="0 0 ${st.W} ${st.H}">${buildSvg(true)}</svg>`; document.body.append(pre); }
+  }
   window.__st = st; // для отладки в консоли
 })();

@@ -15,3 +15,4 @@ main{flex:1;display:flex;flex-direction:column;min-width:0}#bar{display:flex;gap
 #bar button:disabled{opacity:.4;cursor:default}
 #stage{flex:1;display:grid;place-items:center;padding:20px;overflow:auto}#cvs{max-width:100%;max-height:100%;background:#fff;box-shadow:0 4px 24px #2b215a22;border-radius:6px;touch-action:none}
 @media(max-width:800px){body{flex-direction:column;height:auto}aside{width:100%}}
+.ai{margin:8px 0;font-size:13px}.ai input{width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;margin:6px 0}.ai small,.hint2{color:#6b6786;font-size:11px}

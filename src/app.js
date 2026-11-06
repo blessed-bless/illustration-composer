@@ -1,6 +1,6 @@
 import { PALETTES, parsePalette } from './palettes.js';
 import { renderObject } from './recolor.js';
-import { rng, pickByMetaphor, pickByNames, layout } from './compose.js';
+import { rng, pickByMetaphor, pickByNames, pickByLLM, layout, relax, fit } from './compose.js';
 
 const $ = s => document.querySelector(s);
 const st = { size: 'L', pal: { ...PALETTES }, palId: 'purple', W: 800, H: 600, gs: 1, items: [], sel: null, seed: 1, catalog: [], svg: {} };
@@ -21,7 +21,7 @@ const baseK = n => Math.sqrt(st.W * st.H / Math.max(n, 3)) * 0.9 / 900; // px н
 
 function makeItem(o, mode, n = 4, x = st.W / 2, y = st.H / 2) {
   const sc = baseK(n) * (mode === 'bg' ? 1.3 : 1);
-  return { uid: uid++, id: o.id, x, y, rot: 0, mode, sc, r: 0.3 * Math.hypot(o.w, o.h) * sc };
+  return { uid: uid++, id: o.id, x, y, rot: 0, mode, sc, r: 0.3 * Math.hypot(o.w, o.h) * sc, hw: o.w * sc / 2, hh: o.h * sc / 2 };
 }
 
 function tf(it, w, h, s) {
@@ -38,7 +38,7 @@ function buildSvg(exp) {
     g += `<g data-uid="${it.uid}" style="cursor:move" transform="${tf(it, w, h, s)}"><rect width="${w}" height="${h}" fill="transparent"/>${inner}</g>`;
     if (it.uid === st.sel) g += `<rect transform="${tf(it, w, h, s)}" width="${w}" height="${h}" fill="none" stroke="#2b7cff" stroke-width="${(2 / s).toFixed(2)}" stroke-dasharray="${(6 / s).toFixed(1)}" pointer-events="none"/>`;
   }
-  return `<rect width="${st.W}" height="${st.H}" fill="${palette().canvas}"/>${g}`;
+  return `<defs><clipPath id="cv-clip"><rect width="${st.W}" height="${st.H}"/></clipPath></defs><rect width="${st.W}" height="${st.H}" fill="${palette().canvas}"/><g clip-path="url(#cv-clip)">${g}</g>`;
 }
 
 function render() {
@@ -61,13 +61,19 @@ function renderLib() {
   }
 }
 
-function compose() {
+async function compose() {
   const text = $('#prompt').value.trim(), scen = document.querySelector('[name=sc]:checked').value;
   const notes = $('#notes');
   if (!text) { notes.textContent = 'Введите метафору или названия компонентов.'; return; }
   st.seed = Date.now() % 1e9;
   const rand = rng(st.seed);
-  const pick = (scen === 'names' ? pickByNames : pickByMetaphor)(text, st.catalog, rand);
+  let pick, key = '';
+  try { key = localStorage.getItem('claude_key') || ''; } catch {}
+  if (scen === 'metaphor' && key) {
+    notes.textContent = 'ИИ разбирает метафору…';
+    try { pick = await pickByLLM(text, st.catalog, key, rand); }
+    catch (err) { pick = pickByMetaphor(text, st.catalog, rand); pick.notes.unshift('ИИ недоступен (' + err.message + '), использован локальный подбор.'); }
+  } else pick = (scen === 'names' ? pickByNames : pickByMetaphor)(text, st.catalog, rand);
   notes.textContent = pick.notes.join(' ');
   if (!pick.main.length) return;
   const useBg = $('#useBg').checked;
@@ -75,7 +81,9 @@ function compose() {
   const bg = useBg ? pick.bg.map(o => makeItem(o, 'bg', n)) : [];
   const main = pick.main.map(o => makeItem(o, 'main', n));
   // фон раскладывается первым и лежит под главными объектами
-  st.items = [...layout(bg, st.W, st.H, rand), ...layout(main, st.W, st.H, rand)];
+  layout(bg, st.W, st.H, rand); layout(main, st.W, st.H, rand); relax(main);
+  st.items = [...bg, ...main];
+  fit(st.items, st.W, st.H, 0.88, main);
   st.sel = null;
   render();
 }
@@ -144,7 +152,8 @@ $('#palFile').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
     const id = 'u' + Date.now();
-    st.pal[id] = parsePalette(JSON.parse(await f.text()), palette());
+    const txt = await f.text(); let j; try { j = JSON.parse(txt); } catch { j = txt.match(/#[0-9a-f]{6}|#[0-9a-f]{3}/gi) || []; }
+    st.pal[id] = parsePalette(j, palette());
     st.palId = id; fillPal(); renderLib(); render();
   } catch (err) { $('#notes').textContent = 'Палитра не принята: ' + err.message; }
   e.target.value = '';
@@ -166,6 +175,9 @@ $('#export').onclick = () => {
   a.download = 'composition.svg'; a.click(); URL.revokeObjectURL(a.href);
 };
 
+const keyEl = $("#apiKey");
+try { keyEl.value = localStorage.getItem("claude_key") || ""; } catch {}
+keyEl.onchange = () => { try { localStorage.setItem("claude_key", keyEl.value.trim()); } catch {} };
 // --- старт
 (async () => {
   st.catalog = await (await fetch('catalog/manifest.json')).json();

@@ -12,12 +12,12 @@ const fileOf = (o, mode) => {
   const s = st.size === 'S' && o.s;
   return (mode === 'bg' ? (s ? o.sbg : o.bg) : null) || (s ? o.s : o.file);
 };
-// f — поправка масштаба: S-файлы нарисованы в половинных единицах, объект на холсте должен остаться того же размера
+// f: S assets are drawn in half-units; keep on-canvas size equal to the L object
 const draw = (o, mode, prefix) => {
   const r = renderObject(st.svg[fileOf(o, mode)], { dst: palette(), mode, detail: o.s ? 'L' : st.size, prefix });
   return { ...r, f: o.w ? Math.min(o.w / r.w, o.h / r.h) : 1 };
 };
-const baseK = n => Math.sqrt(st.W * st.H / Math.max(n, 3)) * 0.9 / 900; // px на единицу исходного рисунка
+const baseK = n => Math.sqrt(st.W * st.H / Math.max(n, 3)) * 0.9 / 900; // px per source drawing unit
 
 const history=[];
 function cancelCompose() {
@@ -59,7 +59,7 @@ function tf(it, w, h, s) {
   return `translate(${(st.W/2+(it.x-st.W/2)*st.gs).toFixed(3)} ${(st.H/2+(it.y-st.H/2)*st.gs).toFixed(3)}) rotate(${it.rot}) scale(${s.toFixed(4)}) translate(${-w / 2} ${-h / 2})`;
 }
 
-// exp=true: чистый SVG для экспорта (без рамки выделения и невидимых областей клика)
+// exp=true: clean export SVG (no selection frame or invisible hit areas)
 function buildSvg(exp) {
   let g = '';
   for (const it of st.items) {
@@ -126,7 +126,7 @@ async function compose(shuffle=false) {
   const n = pick.main.length + (useBg ? pick.bg.length : 0);
   const bg = useBg ? pick.bg.map(o => makeItem(o, 'bg', n)) : [];
   const main = pick.main.map(o => makeItem(o, 'main', n));
-  // фон раскладывается первым и лежит под главными объектами
+  // Background items are laid out first and sit under main objects
   layout(bg, st.W, st.H, rand); layout(main, st.W, st.H, rand); relax(main);
   save(); drag=null; st.gs=1;
   st.items = [...bg, ...main];
@@ -135,7 +135,7 @@ async function compose(shuffle=false) {
   render();
 }
 
-// --- редактор: выбор и перетаскивание
+// --- editor: select and drag
 let drag = null;
 function pt(e) {
   const c = $('#cvs');
@@ -204,7 +204,7 @@ addEventListener('keydown', e => {
   if (e.key === 'r' || e.key === 'к') act('rr');
 });
 
-// --- параметры
+// --- parameters
 $('#gen').onclick = () => compose();
 $('#shuffle').onclick = () => compose(true);
 document.querySelectorAll('[name=sz]').forEach(r => r.onchange = () => { save(); st.size = r.value; renderLib(); render(); });
@@ -259,13 +259,13 @@ const modelEl = $("#llmModel");
 try { modelEl.value = localStorage.getItem("llm_model") || ""; } catch {}
 modelEl.onchange = () => { try { localStorage.setItem("llm_model", modelEl.value.trim()); } catch {} };
 keyEl.onchange = () => { try { localStorage.setItem("claude_key", keyEl.value.trim()); } catch {} };
-// --- старт
+// --- boot
 (async () => {
   st.catalog = await (await fetch('catalog/manifest.json')).json();
   const files = new Set(st.catalog.flatMap(o => [o.file, o.bg, o.s, o.sbg].filter(Boolean)));
   await Promise.all([...files].map(async f => { st.svg[f] = await (await fetch('catalog/' + f)).text(); }));
   fillPal(); renderLib(); render();
-  // Готовые ссылки: ?q=текст&mode=names&pal=orange&size=S&canvas=1080x1080&dump=1 (dump кладёт экспортный SVG в #dump)
+  // Deep links: ?q=text&mode=names&pal=orange&size=S&canvas=1080x1080&dump=1 (dump writes export SVG into #dump)
   const q = new URLSearchParams(location.search);
   if (st.pal[q.get('pal')]) { st.palId = q.get('pal'); $('#pal').value = st.palId; }
   if (q.get('size') === 'S') { st.size = 'S'; document.querySelector('[name=sz][value=S]').checked = true; }
@@ -276,5 +276,5 @@ keyEl.onchange = () => { try { localStorage.setItem("claude_key", keyEl.value.tr
     await compose();
     if (q.get('dump')) { const pre = document.createElement('pre'); pre.id = 'dump'; pre.textContent = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${st.W}" height="${st.H}" viewBox="0 0 ${st.W} ${st.H}">${buildSvg(true)}</svg>`; document.body.append(pre); }
   }
-  window.__st = st; // для отладки в консоли
+  window.__st = st; // console debugging
 })();

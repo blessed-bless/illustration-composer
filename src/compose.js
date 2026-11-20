@@ -3,7 +3,7 @@ const stem = w => w.toLowerCase().replace(/ё/g, 'е').slice(0, 5);
 const tok = s => (s.toLowerCase().replace(/ё/g, 'е').match(/[a-zа-я0-9]+/g) || []).filter(w => w.length > 2);
 const score = (o, tokens) => { const keys = new Set(tok(o.tags + ' ' + o.name).map(stem)); return tokens.reduce((s, t) => s + (keys.has(stem(t)) ? 1 : 0), 0); };
 
-// Смысловые группы: абстрактное понятие -> подходящие объекты. Работает без интернета и ключей.
+// Sense groups: abstract concept -> fitting objects. Works offline without API keys.
 const CONCEPTS = [
   ['рост развитие карьера успех достижение прогресс цель вырасти масштаб', ['tulips', 'book', 'coin']],
   ['команда сотрудничество партнерство вместе коллектив совместный интеграция', ['puzzle', 'phone', 'folder']],
@@ -32,7 +32,7 @@ const bgPool = (catalog, main, rand) => {
   return pool;
 };
 
-// Сценарий 1 без LLM: теги + смысловые группы.
+// Scenario 1 without LLM: tags + sense groups.
 export function pickByMetaphor(text, catalog, rand, nMain = 4, nBg = 3) {
   const t = tok(text), notes = [];
   const scored = catalog.map(o => ({ o, s: score(o, t) + conceptScore(o, t) + rand() * 0.01 })).sort((a, b) => b.s - a.s);
@@ -43,7 +43,7 @@ export function pickByMetaphor(text, catalog, rand, nMain = 4, nBg = 3) {
   }
   return { main, bg: bgPool(catalog, main, rand).slice(0, nBg), notes };
 }
-// Сценарий 2: список названий компонентов -> объекты (порядок и повторы сохраняются).
+// Scenario 2: comma-separated component names -> objects (order and repeats kept).
 export function pickByNames(text, catalog, rand, nBg = 3) {
   const notes = [], main = [];
   for (const part of text.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean)) {
@@ -54,13 +54,13 @@ export function pickByNames(text, catalog, rand, nBg = 3) {
   return { main, bg: main.length ? bgPool(catalog, main, rand).slice(0, nBg) : [], notes };
 }
 
-// Сценарий 1 с ИИ: Claude сам разбирает метафору и выбирает объекты из каталога.
-// Ключ вводит пользователь и хранится только в его браузере (запрос идёт напрямую в API).
+// Scenario 1 with AI: model parses the metaphor and picks catalog objects.
+// User enters the key; it stays in the browser (request goes straight to the API).
 export async function pickByLLM(text, catalog, key, rand, opts = {}) {
   const list = catalog.map(o => `${o.id} — ${o.name} (${o.tags.split(' ').slice(0, 8).join(', ')})`).join('\n');
   const user = `Метафора/заголовок: «${text}»\n\nДоступные объекты:\n${list}`;
   const SYSTEM = 'Ты подбираешь иллюстративные объекты для композиции под метафору или заголовок. Выбирай ТОЛЬКО id из списка. Отвечай одним JSON без пояснений: {"main":[3-4 id главных объектов, самые образные],"bg":[2-3 id фоновых],"why":"одна фраза"}.';
-  // Провайдер определяется по ключу: ключи xAI начинаются с grok_ или xai-, остальные считаются ключами Claude.
+  // Provider from key shape: xAI keys start with grok_/xai-; otherwise Claude.
   const xai = /^(grok_|xai-)/.test(key);
   let raw;
   if (xai) {
@@ -81,7 +81,7 @@ export async function pickByLLM(text, catalog, key, rand, opts = {}) {
     });
     const base = { model: opts.model || 'claude-haiku-5-5', system: SYSTEM, messages: [{ role: 'user', content: user }] };
     let res = await post({ ...base, max_tokens: 400, thinking: { type: 'disabled' }, output_config: { effort: 'low' } });
-    // 400 чаще всего из-за необязательных параметров (thinking/effort) — пробуем простой запрос
+    // 400 is often optional params (thinking/effort) — retry a plain request
     if (res.status === 400) res = await post({ ...base, max_tokens: 1024 });
     if (!res.ok) {
       let msg = ''; try { msg = (await res.json()).error?.message || ''; } catch {}
@@ -101,7 +101,7 @@ export async function pickByLLM(text, catalog, key, rand, opts = {}) {
   return {main,bg,notes:j.why ? ['ИИ: '+j.why] : []};
 }
 
-// Раскладка: сначала случайные позиции с минимальным пересечением, затем «расталкивание» главных объектов.
+// Layout: random positions with minimal overlap, then push main objects apart.
 export function layout(list, W, H, rand) {
   const placed = [], pad = Math.min(W, H) * 0.1;
   for (const it of list) {
@@ -121,7 +121,7 @@ export function relax(list, iters = 60) {
     if (d < min) { const m = (min - d) / 2 / d; a.x -= dx * m; a.y -= dy * m; b.x += dx * m; b.y += dy * m; }
   }
 }
-// Вписывает всю композицию в холст: масштабирует и центрирует так, чтобы не было пустот и вылетов за край.
+// Fit the whole composition into the canvas: scale and center without gaps or overflow.
 export function fit(items, W, H, fill = 0.9, basis = items) {
   if (!basis.length) return;
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
